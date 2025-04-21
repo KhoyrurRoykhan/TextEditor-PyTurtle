@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import CodeMirror from '@uiw/react-codemirror';
 import { python } from '@codemirror/lang-python';
+import { dracula } from '@uiw/codemirror-theme-dracula';
 import './assets/tutor.css';
 import './asset_skulpt/SkulptTurtleRunner.css';
 import { Button, Modal, Form } from 'react-bootstrap';
-import { BsArrowClockwise, BsPlayFill, BsFolder2Open, BsDownload, BsSave2 } from 'react-icons/bs';
+import { BsArrowClockwise, BsPlayFill, BsFolder2Open, BsDownload, BsSave2, BsMoon, BsSun } from 'react-icons/bs';
 import './assets/button3d.css';
 
 const TextEditorPage = () => {
@@ -12,6 +13,7 @@ const TextEditorPage = () => {
     const [output, setOutput] = useState('');
     const [filename, setFilename] = useState('my_code');
     const [showSaveModal, setShowSaveModal] = useState(false);
+    const [theme, setTheme] = useState('light');
     const fileInputRef = useRef(null);
 
     const outf = (text) => {
@@ -25,10 +27,84 @@ const TextEditorPage = () => {
         return window.Sk.builtinFiles['files'][x];
     };
 
+    const parseSimpleCommands = (code) => {
+        const lines = code.split('\n');
+        const parsedLines = [];
+        let i = 0;
+
+        while (i < lines.length) {
+            const line = lines[i];
+            const trimmed = line.trim();
+            const leadingSpaces = line.match(/^\s*/)?.[0] || '';
+
+            if (trimmed === '' || trimmed.startsWith('#')) {
+                parsedLines.push(line);
+                i++;
+                continue;
+            }
+
+            const forMatch = trimmed.match(/^for\s+(\d+)$/);
+            if (forMatch) {
+                const loopCount = parseInt(forMatch[1]);
+                parsedLines.push(`${leadingSpaces}for i in range(${loopCount}):`);
+                i++;
+
+                while (i < lines.length) {
+                    const nextLine = lines[i];
+                    const nextTrimmed = nextLine.trim();
+                    const nextIndent = nextLine.match(/^\s*/)?.[0].length || 0;
+
+                    if (nextTrimmed === '' || nextTrimmed.startsWith('#')) {
+                        parsedLines.push(nextLine);
+                        i++;
+                        continue;
+                    }
+
+                    if (nextIndent <= leadingSpaces.length) break;
+
+                    const parts = nextTrimmed.split(/\s+/);
+                    const cmd = parts[0];
+                    const args = parts.slice(1);
+                    const isAllArgsNumeric = args.every(arg => !isNaN(parseFloat(arg)));
+
+                    if (nextTrimmed.includes('(') && nextTrimmed.includes(')')) {
+                        parsedLines.push(nextLine);
+                    } else if (isAllArgsNumeric && args.length > 0) {
+                        parsedLines.push(`${nextLine.match(/^\s*/)?.[0] || ''}${cmd}(${args.join(', ')})`);
+                    } else {
+                        parsedLines.push(nextLine);
+                    }
+                    i++;
+                }
+                continue;
+            }
+
+            const parts = trimmed.split(/\s+/);
+            const cmd = parts[0];
+            const args = parts.slice(1);
+            const noArgCommands = ['clear', 'home', 'reset', 'penup', 'pendown', 'showturtle', 'hideturtle'];
+            const isAllArgsNumeric = args.every(arg => !isNaN(parseFloat(arg)));
+
+            if (trimmed.includes('(') && trimmed.includes(')')) {
+                parsedLines.push(line);
+            } else if (noArgCommands.includes(cmd) && args.length === 0) {
+                parsedLines.push(`${leadingSpaces}${cmd}()`);
+            } else if (isAllArgsNumeric && args.length > 0) {
+                parsedLines.push(`${leadingSpaces}${cmd}(${args.join(', ')})`);
+            } else {
+                parsedLines.push(line);
+            }
+            i++;
+        }
+
+        return parsedLines.join('\n');
+    };
+
     const runit = (code, forceReset = false) => {
         setOutput('');
         const imports = "from turtle import *\nreset()\nshape('turtle')\n";
-        const prog = forceReset ? imports : imports + pythonCode;
+        const parsedCode = parseSimpleCommands(pythonCode);
+        const prog = forceReset ? imports : imports + parsedCode;
 
         window.Sk.pre = "output";
         window.Sk.configure({ output: outf, read: builtinRead });
@@ -76,22 +152,27 @@ const TextEditorPage = () => {
     };
 
     return (
-        <div className='mt-3'>
-            <div className='content' style={{ paddingLeft: 50, paddingRight: 50, marginTop: 70 }}>
-                <br />
+        <div style={{height:"100%"}}>
+            <div className='content' style={{ paddingLeft: 50, paddingRight: 50, marginTop: 75 }}>
+                {/* Toggle Theme */}
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 10 }}>
+                    <Button variant="secondary" onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}>
+                        {theme === 'light' ? <BsMoon /> : <BsSun />} Ganti ke {theme === 'light' ? 'Gelap' : 'Terang'}
+                    </Button>
+                </div>
+
                 <div className="skulpt-container" style={{ border: "2px solid #ccc" }}>
                     <div className="editor-section">
                         <CodeMirror
                             placeholder={'# Tuliskan kode anda disini!'}
                             value={pythonCode}
                             height="400px"
-                            theme="light"
+                            theme={theme === 'dark' ? 'dark' : 'light'}
                             extensions={[python()]}
                             onChange={(value) => setPythonCode(value)}
                             style={{ border: '1px solid #ccc' }}
                         />
 
-                        {/* Tombol aksi */}
                         <div style={{ marginTop: '10px', display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
                             <a onClick={() => runit()} className='button-3d-run'>
                                 <BsPlayFill /> Jalankan
@@ -114,18 +195,15 @@ const TextEditorPage = () => {
                             </a>
                         </div>
 
-                        {/* Output */}
                         <pre className="output mt-3" style={{ height: 60 }}>{output}</pre>
                     </div>
 
-                    {/* Canvas */}
                     <div className="canvas-section" style={{ maxWidth: 400, maxHeight: 400 }}>
                         <div id="mycanvas"></div>
                     </div>
                 </div>
             </div>
 
-            {/* Modal Simpan File */}
             <Modal show={showSaveModal} onHide={() => setShowSaveModal(false)} centered>
                 <Modal.Header closeButton>
                     <Modal.Title>Simpan File</Modal.Title>
@@ -142,9 +220,7 @@ const TextEditorPage = () => {
                     </Form.Group>
                 </Modal.Body>
                 <Modal.Footer>
-                    <a onClick={() => setShowSaveModal(false)} className='button-3d-grey'>
-                        Batal
-                    </a>
+                    <a onClick={() => setShowSaveModal(false)} className='button-3d-grey'>Batal</a>
                     <a onClick={() => {
                         handleSaveFile();
                         setShowSaveModal(false);

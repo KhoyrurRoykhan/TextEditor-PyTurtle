@@ -114,3 +114,19 @@
     padding: 20px;
   }
 }
+
+/* Tema */
+.dark-mode {
+  background-color: #121212;
+  color: #ffffff;
+}
+
+.dark-mode .skulpt-container {
+  border-color: #444;
+  background-color: #1e1e1e;
+}
+
+.dark-mode .output {
+  background-color: #1e1e1e;
+  color: #f8f8f2;
+}
