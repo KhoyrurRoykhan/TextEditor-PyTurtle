@@ -15,6 +15,15 @@ const TextEditorPage = () => {
     const [showSaveModal, setShowSaveModal] = useState(false);
     const [theme, setTheme] = useState('light');
     const fileInputRef = useRef(null);
+    const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+    useEffect(() => {
+        const handleResize = () => {
+          setIsMobile(window.innerWidth <= 768);
+        };
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+      }, []);
 
     const outf = (text) => {
         setOutput((prev) => prev + text);
@@ -139,7 +148,7 @@ const TextEditorPage = () => {
 
     const runit = (code, forceReset = false) => {
         setOutput('');
-        const imports = "from turtle import *\nreset()\nshape('turtle')\n";
+        const imports = "from turtle import *\nreset()\nshape('turtle')\nspeed(1)\n";
         const parsedCode = parseSimpleCommands(pythonCode);
         const prog = forceReset ? imports : imports + parsedCode;
 
@@ -189,83 +198,108 @@ const TextEditorPage = () => {
     };
 
     return (
-        <div style={{height:"100%"}}>
-            <div className='content' style={{ paddingLeft: 50, paddingRight: 50, marginTop: 75 }}>
-                {/* Toggle Theme */}
-                <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 10 }}>
+        <div className='px-3' style={{ paddingTop: '80px', paddingBottom: '20px', position: 'relative', zIndex: 1, maxWidth: '100%', overflowX: 'hidden' }}>
+            {/* Toggle Theme */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 10 }}>
                     <Button variant="secondary" onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}>
                         {theme === 'light' ? <BsMoon /> : <BsSun />} Ganti ke {theme === 'light' ? 'Gelap' : 'Terang'}
                     </Button>
                 </div>
-
-                <div className="skulpt-container" style={{ border: "2px solid #ccc" }}>
-                    <div className="editor-section">
+                <div
+                    className="skulpt-container"
+                    style={{
+                    border: "2px solid #ccc",
+                    display: 'flex',
+                    flexDirection: isMobile ? 'column' : 'row',
+                    gap: '20px',
+                    padding: '20px',
+                    alignItems: 'stretch',
+                    maxWidth: '100%',
+                    overflowX: 'hidden',
+                    }}
+                >
+                    {/* Editor */}
+                    <div style={{ flex: 1, minWidth: 0 }}>
                         <CodeMirror
-                            placeholder={'# Tuliskan kode anda disini!'}
-                            value={pythonCode}
-                            height="400px"
-                            theme={theme === 'dark' ? 'dark' : 'light'}
-                            extensions={[python()]}
-                            onChange={(value) => setPythonCode(value)}
-                            style={{ border: '1px solid #ccc' }}
+                        placeholder={'# Tuliskan kode anda disini!'}
+                        value={pythonCode}
+                        height="400px"
+                        theme={theme === 'dark' ? 'dark' : 'light'}
+                        extensions={[python()]}
+                        onChange={(value) => setPythonCode(value)}
+                        style={{ border: '1px solid #ccc', width: '100%' }}
+                    />
+
+
+                    <div style={{ marginTop: '10px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                        <a onClick={() => runit()} className='button-3d-run'>
+                        <BsPlayFill /> Jalankan
+                        </a>
+                        <a onClick={resetCode} className='button-3d-reset'>
+                        <BsArrowClockwise /> Reset
+                        </a>
+                        <a className='button-3d-open' onClick={() => fileInputRef.current.click()}>
+                        <BsFolder2Open /> Buka File
+                        </a>
+                        <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept=".py"
+                        style={{ display: 'none' }}
+                        onChange={handleOpenFile}
                         />
-
-                        <div style={{ marginTop: '10px', display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
-                            <a onClick={() => runit()} className='button-3d-run'>
-                                <BsPlayFill /> Jalankan
-                            </a>
-                            <a onClick={resetCode} className='button-3d-reset'>
-                                <BsArrowClockwise /> Reset
-                            </a>
-                            <a className='button-3d-open' onClick={() => fileInputRef.current.click()} >
-                                <BsFolder2Open /> Buka File
-                            </a>
-                            <input
-                                ref={fileInputRef}
-                                type="file"
-                                accept=".py"
-                                style={{ display: 'none' }}
-                                onChange={handleOpenFile}
-                            />
-                            <a className='button-3d-open' onClick={() => setShowSaveModal(true)}>
-                                <BsSave2 /> Simpan File
-                            </a>
-                        </div>
-
-                        <pre className="output mt-3" style={{ height: 70 }}>{output}</pre>
+                        <a className='button-3d-open' onClick={() => setShowSaveModal(true)}>
+                        <BsSave2 /> Simpan File
+                        </a>
                     </div>
 
-                    <div className="canvas-section" style={{ maxWidth: 400, maxHeight: 400 }}>
-                        <div id="mycanvas"></div>
+                    <pre className="output mt-3" style={{ height: 60, overflow: 'auto' }}>{output}</pre>
+                    </div>
+
+                    {/* Canvas */}
+                    <div
+                    className="canvas-section"
+                    style={{
+                        flex: isMobile ? 'none' : '0 0 400px',
+                        width: '100%',
+                        maxWidth: '400px',
+                        maxHeight: 400,
+                        alignSelf: isMobile ? 'center' : 'flex-start',
+                        overflowX: isMobile ? 'auto' : 'visible',
+                    }}
+                    >
+                    <div id="mycanvas" style={{ width: '100%' }}></div>
                     </div>
                 </div>
-            </div>
 
-            <Modal show={showSaveModal} onHide={() => setShowSaveModal(false)} centered>
-                <Modal.Header closeButton>
+                {/* Modal Simpan File */}
+                <Modal show={showSaveModal} onHide={() => setShowSaveModal(false)} centered>
+                    <Modal.Header closeButton>
                     <Modal.Title>Simpan File</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
+                    </Modal.Header>
+                    <Modal.Body>
                     <Form.Group>
                         <Form.Label>Nama File</Form.Label>
                         <Form.Control
-                            type="text"
-                            value={filename}
-                            onChange={(e) => setFilename(e.target.value)}
-                            placeholder="Masukkan nama file"
+                        type="text"
+                        value={filename}
+                        onChange={(e) => setFilename(e.target.value)}
+                        placeholder="Masukkan nama file"
                         />
                     </Form.Group>
-                </Modal.Body>
-                <Modal.Footer>
-                    <a onClick={() => setShowSaveModal(false)} className='button-3d-grey'>Batal</a>
+                    </Modal.Body>
+                    <Modal.Footer>
+                    <a onClick={() => setShowSaveModal(false)} className='button-3d-grey'>
+                        Batal
+                    </a>
                     <a onClick={() => {
                         handleSaveFile();
                         setShowSaveModal(false);
                     }} className='button-3d-open'>
                         <BsDownload /> Simpan
                     </a>
-                </Modal.Footer>
-            </Modal>
+                    </Modal.Footer>
+                </Modal>
         </div>
     );
 };
