@@ -148,7 +148,7 @@ const TextEditorPage = () => {
 
     const runit = (code, forceReset = false) => {
         setOutput('');
-        const imports = "from turtle import *\nreset()\nshape('turtle')\nspeed(1)\n";
+        const imports = "from turtle import *\nreset()\nshape('turtle')\nspeed(2)\n";
         const parsedCode = parseSimpleCommands(pythonCode);
         const prog = forceReset ? imports : imports + parsedCode;
 
