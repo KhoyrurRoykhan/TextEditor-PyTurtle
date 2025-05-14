@@ -33,7 +33,7 @@ const Navigasibar = () => {
   return (
     <Navbar className="bg-success fixed-top">
       <Container>
-      <Nav.Link style={{ color: 'white', fontSize: '1.5rem', fontWeight: 'bold' }} href="/"> <FaCode /> Text Editor Python Turtle</Nav.Link>
+      <Nav.Link style={{ color: 'white', fontSize: '1.5rem', fontWeight: 'bold' }} href="/"> <FaCode /> BidGeometry</Nav.Link>
         <Navbar.Toggle />
         <Navbar.Collapse id="basic-navbar-nav" style={{ marginLeft: '20px'}}>
           <Nav className="me-auto">
