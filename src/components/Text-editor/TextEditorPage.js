@@ -198,7 +198,7 @@ const TextEditorPage = () => {
     };
 
     return (
-        <div className='px-3' style={{ paddingTop: '80px', paddingBottom: '20px', position: 'relative', zIndex: 1, maxWidth: '100%', overflowX: 'hidden' }}>
+        <div className='px-3' style={{ paddingTop: '80px', paddingBottom: '20px', position: 'relative', zIndex: 1, maxWidth: '100%', overflowX: 'hidden',paddingLeft:"100px", paddingRight:"100px" }}>
             {/* Toggle Theme */}
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 10 }}>
                     <Button variant="secondary" onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}>
