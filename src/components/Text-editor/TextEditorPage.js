@@ -2,11 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import CodeMirror from '@uiw/react-codemirror';
 import { python } from '@codemirror/lang-python';
 import { dracula } from '@uiw/codemirror-theme-dracula';
-import './assets/tutor.css';
-import './asset_skulpt/SkulptTurtleRunner.css';
-import { Button, Modal, Form } from 'react-bootstrap';
+import { Button, Modal, Form, Navbar, Nav, Container } from 'react-bootstrap';
 import { BsArrowClockwise, BsPlayFill, BsFolder2Open, BsDownload, BsSave2, BsMoon, BsSun } from 'react-icons/bs';
-import './assets/button3d.css';
+import { FaCode } from 'react-icons/fa';
 
 const TextEditorPage = () => {
     const [pythonCode, setPythonCode] = useState('');
@@ -14,16 +12,17 @@ const TextEditorPage = () => {
     const [filename, setFilename] = useState('my_code');
     const [showSaveModal, setShowSaveModal] = useState(false);
     const [theme, setTheme] = useState('light');
+    const [isRunning, setIsRunning] = useState(false);
     const fileInputRef = useRef(null);
     const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
     useEffect(() => {
         const handleResize = () => {
-          setIsMobile(window.innerWidth <= 768);
+            setIsMobile(window.innerWidth <= 768);
         };
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
-      }, []);
+    }, []);
 
     const outf = (text) => {
         setOutput((prev) => prev + text);
@@ -37,122 +36,104 @@ const TextEditorPage = () => {
     };
 
     const parseSimpleCommands = (code) => {
+        // Fungsi parseSimpleCommands (sama seperti sebelumnya)
         const lines = code.split('\n');
         const parsedLines = [];
         let i = 0;
-      
         while (i < lines.length) {
-          const line = lines[i];
-          const trimmed = line.trim();
-          const leadingSpaces = line.match(/^\s*/)?.[0] || '';
-      
-          if (trimmed === '' || trimmed.startsWith('#')) {
-            parsedLines.push(line);
-            i++;
-            continue;
-          }
-      
-          const forMatch = trimmed.match(/^for\s+(\d+)$/);
-          if (forMatch) {
-            const loopCount = parseInt(forMatch[1]);
-            parsedLines.push(`${leadingSpaces}for i in range(${loopCount}):`);
-            i++;
-      
-            while (i < lines.length) {
-              const nextLine = lines[i];
-              const nextTrimmed = nextLine.trim();
-              const nextIndent = nextLine.match(/^\s*/)?.[0].length || 0;
-      
-              if (nextTrimmed === '' || nextTrimmed.startsWith('#')) {
-                parsedLines.push(nextLine);
+            const line = lines[i];
+            const trimmed = line.trim();
+            const leadingSpaces = line.match(/^\s*/)?.[0] || '';
+            if (trimmed === '' || trimmed.startsWith('#')) {
+                parsedLines.push(line);
                 i++;
                 continue;
-              }
-      
-              if (nextIndent <= leadingSpaces.length) break;
-      
-              const parts = nextTrimmed.split(/\s+/);
-              const cmd = parts[0];
-              const args = parts.slice(1);
-              const isAllArgsNumeric = args.every(arg => !isNaN(parseFloat(arg)));
-              const isStringArg = args.length === 1 && /^["'].*["']$/.test(args[0]);
-              const isMixedNumericStringArgs =
-                args.length === 2 &&
-                !isNaN(parseFloat(args[0])) &&
-                /^["'].*["']$/.test(args[1]);
-      
-              if (nextTrimmed.includes('(') && nextTrimmed.includes(')')) {
-                parsedLines.push(nextLine);
-              } else if ((isAllArgsNumeric && args.length > 0) || isStringArg || isMixedNumericStringArgs) {
-                parsedLines.push(`${nextLine.match(/^\s*/)?.[0] || ''}${cmd}(${args.join(',')})`);
-              } else {
-                parsedLines.push(nextLine);
-              }
-              i++;
             }
-            continue;
-          }
-      
-          const parts = trimmed.split(/\s+/);
-          const cmd = parts[0];
-          const args = parts.slice(1);
-          const noArgCommands = ['clear', 'home', 'reset', 'penup', 'pendown', 'showturtle', 'hideturtle', 'begin_fill', 'end_fill'];
-          const isAllArgsNumeric = args.every(arg => !isNaN(parseFloat(arg)));
-          const isStringArg = args.length === 1 && /^["'].*["']$/.test(args[0]);
-          const isMixedNumericStringArgs =
-            args.length === 2 &&
-            !isNaN(parseFloat(args[0])) &&
-            /^["'].*["']$/.test(args[1]);
-      
-          if (cmd === 'print' && args.length >= 1) {
-            const arg = args[0];
-            if (arg === 'position') {
-              parsedLines.push(`${leadingSpaces}print(position())`);
-              i++;
-              continue;
-            } else if (arg === 'xcor') {
-              parsedLines.push(`${leadingSpaces}print(xcor())`);
-              i++;
-              continue;
-            } else if (arg === 'ycor') {
-              parsedLines.push(`${leadingSpaces}print(ycor())`);
-              i++;
-              continue;
-            } else if (arg === 'heading') {
-              parsedLines.push(`${leadingSpaces}print(heading())`);
-              i++;
-              continue;
-            } else if (arg === 'isdown') {
-              parsedLines.push(`${leadingSpaces}print(isdown())`);
-              i++;
-              continue;
-            } else if (arg === 'distance') {
-              if (args.length === 3 && !isNaN(args[1]) && !isNaN(args[2])) {
-                parsedLines.push(`${leadingSpaces}print(distance(${args[1]},${args[2]}))`);
+            const forMatch = trimmed.match(/^for\s+(\d+)$/);
+            if (forMatch) {
+                const loopCount = parseInt(forMatch[1]);
+                parsedLines.push(`${leadingSpaces}for i in range(${loopCount}):`);
                 i++;
+                while (i < lines.length) {
+                    const nextLine = lines[i];
+                    const nextTrimmed = nextLine.trim();
+                    const nextIndent = nextLine.match(/^\s*/)?.[0].length || 0;
+                    if (nextTrimmed === '' || nextTrimmed.startsWith('#')) {
+                        parsedLines.push(nextLine);
+                        i++;
+                        continue;
+                    }
+                    if (nextIndent <= leadingSpaces.length) break;
+                    const parts = nextTrimmed.split(/\s+/);
+                    const cmd = parts[0];
+                    const args = parts.slice(1);
+                    const isAllArgsNumeric = args.every(arg => !isNaN(parseFloat(arg)));
+                    const isStringArg = args.length === 1 && /^["'].*["']$/.test(args[0]);
+                    const isMixedNumericStringArgs = args.length === 2 && !isNaN(parseFloat(args[0])) && /^["'].*["']$/.test(args[1]);
+                    if (nextTrimmed.includes('(') && nextTrimmed.includes(')')) {
+                        parsedLines.push(nextLine);
+                    } else if ((isAllArgsNumeric && args.length > 0) || isStringArg || isMixedNumericStringArgs) {
+                        parsedLines.push(`${nextLine.match(/^\s*/)?.[0] || ''}${cmd}(${args.join(',')})`);
+                    } else {
+                        parsedLines.push(nextLine);
+                    }
+                    i++;
+                }
                 continue;
-              }
             }
-          }
-      
-          if (trimmed.includes('(') && trimmed.includes(')')) {
-            parsedLines.push(line);
-          } else if (noArgCommands.includes(cmd) && args.length === 0) {
-            parsedLines.push(`${leadingSpaces}${cmd}()`);
-          } else if ((isAllArgsNumeric && args.length > 0) || isStringArg || isMixedNumericStringArgs) {
-            parsedLines.push(`${leadingSpaces}${cmd}(${args.join(',')})`);
-          } else {
-            parsedLines.push(line);
-          }
-      
-          i++;
+            const parts = trimmed.split(/\s+/);
+            const cmd = parts[0];
+            const args = parts.slice(1);
+            const noArgCommands = ['clear', 'home', 'reset', 'penup', 'pendown', 'showturtle', 'hideturtle', 'begin_fill', 'end_fill'];
+            const isAllArgsNumeric = args.every(arg => !isNaN(parseFloat(arg)));
+            const isStringArg = args.length === 1 && /^["'].*["']$/.test(args[0]);
+            const isMixedNumericStringArgs = args.length === 2 && !isNaN(parseFloat(args[0])) && /^["'].*["']$/.test(args[1]);
+            if (cmd === 'print' && args.length >= 1) {
+                const arg = args[0];
+                if (arg === 'position') {
+                    parsedLines.push(`${leadingSpaces}print(position())`);
+                    i++;
+                    continue;
+                } else if (arg === 'xcor') {
+                    parsedLines.push(`${leadingSpaces}print(xcor())`);
+                    i++;
+                    continue;
+                } else if (arg === 'ycor') {
+                    parsedLines.push(`${leadingSpaces}print(ycor())`);
+                    i++;
+                    continue;
+                } else if (arg === 'heading') {
+                    parsedLines.push(`${leadingSpaces}print(heading())`);
+                    i++;
+                    continue;
+                } else if (arg === 'isdown') {
+                    parsedLines.push(`${leadingSpaces}print(isdown())`);
+                    i++;
+                    continue;
+                } else if (arg === 'distance') {
+                    if (args.length === 3 && !isNaN(args[1]) && !isNaN(args[2])) {
+                        parsedLines.push(`${leadingSpaces}print(distance(${args[1]},${args[2]}))`);
+                        i++;
+                        continue;
+                    }
+                }
+            }
+            if (trimmed.includes('(') && trimmed.includes(')')) {
+                parsedLines.push(line);
+            } else if (noArgCommands.includes(cmd) && args.length === 0) {
+                parsedLines.push(`${leadingSpaces}${cmd}()`);
+            } else if ((isAllArgsNumeric && args.length > 0) || isStringArg || isMixedNumericStringArgs) {
+                parsedLines.push(`${leadingSpaces}${cmd}(${args.join(',')})`);
+            } else {
+                parsedLines.push(line);
+            }
+            i++;
         }
-      
         return parsedLines.join('\n');
-      };
-    
+    };
 
     const runit = (code, forceReset = false) => {
+        setIsRunning(true);
         setOutput('');
         const imports = "from turtle import *\nreset()\nshape('turtle')\nspeed(2)\n";
         const parsedCode = parseSimpleCommands(pythonCode);
@@ -165,8 +146,14 @@ const TextEditorPage = () => {
         window.Sk.misceval.asyncToPromise(() =>
             window.Sk.importMainWithBody('<stdin>', false, prog, true)
         ).then(
-            () => console.log('success'),
-            (err) => setOutput((prev) => prev + err.toString())
+            () => {
+                console.log('success');
+                setIsRunning(false);
+            },
+            (err) => {
+                setOutput((prev) => prev + err.toString());
+                setIsRunning(false);
+            }
         );
     };
 
@@ -203,110 +190,313 @@ const TextEditorPage = () => {
         URL.revokeObjectURL(url);
     };
 
+    // Styling dinamis berdasarkan tema (kecuali navbar hijau)
+    const themeStyles = {
+        light: {
+            background: '#f8f9fa',
+            surface: '#ffffff',
+            text: '#212529',
+            border: '#dee2e6',
+            outputBg: '#f1f3f5',
+            outputText: '#212529',
+            canvasBorder: '#dee2e6'
+        },
+        dark: {
+            background: '#1e1e2f',
+            surface: '#2d2d3f',
+            text: '#e9ecef',
+            border: '#444c5c',
+            outputBg: '#0f0f1a',
+            outputText: '#e0e0e0',
+            canvasBorder: '#444c5c'
+        }
+    };
+
+    const currentTheme = theme === 'light' ? themeStyles.light : themeStyles.dark;
+
     return (
-        <div className='px-3' style={{ paddingTop: '80px', paddingBottom: '20px', position: 'relative', zIndex: 1, maxWidth: '100%', overflowX: 'hidden',paddingLeft:"100px", paddingRight:"100px" }}>
-            {/* Toggle Theme */}
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 10 }}>
-                    <Button variant="secondary" onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}>
-                        {theme === 'light' ? <BsMoon /> : <BsSun />} Ganti ke {theme === 'light' ? 'Gelap' : 'Terang'}
-                    </Button>
+        <div style={{
+            minHeight: '100vh',
+            backgroundColor: currentTheme.background,
+            transition: 'all 0.3s ease'
+        }}>
+            {/* Navbar dengan warna hijau */}
+            <Navbar expand="lg" style={{
+                backgroundColor: '#1e5631', // warna hijau gelap
+                borderBottom: 'none',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+            }}>
+                <Container fluid>
+                    <Navbar.Brand href="#" style={{ color: '#ffffff', fontWeight: 'bold', fontSize: '1.5rem' }}>
+                      <FaCode />  bidGeometry
+                    </Navbar.Brand>
+                    <Navbar.Toggle aria-controls="basic-navbar-nav" style={{ backgroundColor: '#ffffff33', border: 'none' }} />
+                    <Navbar.Collapse id="basic-navbar-nav" className="justify-content-end">
+                        <Nav>
+                            <Button
+                                variant="light"
+                                onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    backgroundColor: '#ffffff',
+                                    color: '#1e5631',
+                                    border: 'none',
+                                    fontWeight: '500'
+                                }}
+                            >
+                                {theme === 'light' ? <BsMoon /> : <BsSun />}
+                                {theme === 'light' ? 'Mode Gelap' : 'Mode Terang'}
+                            </Button>
+                        </Nav>
+                    </Navbar.Collapse>
+                </Container>
+            </Navbar>
+
+            {/* Konten Utama */}
+            <Container fluid style={{ padding: '2rem', maxWidth: '1400px', margin: '0 auto' }}>
+                <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: isMobile ? '1fr' : '1fr 420px',
+                    gap: '1.5rem',
+                    alignItems: 'start'
+                }}>
+                    {/* Kolom kiri: Editor & Output */}
+                    <div style={{
+                        background: currentTheme.surface,
+                        borderRadius: '20px',
+                        padding: '1.25rem',
+                        boxShadow: '0 8px 20px rgba(0,0,0,0.05)',
+                        border: `1px solid ${currentTheme.border}`
+                    }}>
+                        <div style={{ marginBottom: '1rem' }}>
+                            <CodeMirror
+                                placeholder="# Tulis kode Python turtle di sini..."
+                                value={pythonCode}
+                                height="400px"
+                                theme={theme === 'dark' ? dracula : 'light'}
+                                extensions={[python()]}
+                                onChange={(value) => setPythonCode(value)}
+                                style={{
+                                    borderRadius: '12px',
+                                    overflow: 'hidden',
+                                    border: `1px solid ${currentTheme.border}`
+                                }}
+                            />
+                        </div>
+
+                        {/* Toolbar tombol */}
+                        <div style={{
+                            display: 'flex',
+                            flexWrap: 'wrap',
+                            gap: '0.75rem',
+                            marginBottom: '1.5rem'
+                        }}>
+                            <ActionButton
+                                onClick={() => runit()}
+                                icon={<BsPlayFill />}
+                                label="Jalankan"
+                                variant="primary"
+                                disabled={isRunning}
+                            />
+                            <ActionButton
+                                onClick={resetCode}
+                                icon={<BsArrowClockwise />}
+                                label="Reset"
+                                variant="secondary"
+                            />
+                            <ActionButton
+                                onClick={() => fileInputRef.current.click()}
+                                icon={<BsFolder2Open />}
+                                label="Buka File"
+                                variant="outline"
+                            />
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                accept=".py"
+                                style={{ display: 'none' }}
+                                onChange={handleOpenFile}
+                            />
+                            <ActionButton
+                                onClick={() => setShowSaveModal(true)}
+                                icon={<BsSave2 />}
+                                label="Simpan File"
+                                variant="outline"
+                            />
+                        </div>
+
+                        {/* Output area */}
+                        <div>
+                            <div style={{
+                                fontSize: '0.85rem',
+                                fontWeight: '500',
+                                marginBottom: '0.5rem',
+                                color: currentTheme.text,
+                                letterSpacing: '0.5px'
+                            }}>
+                                Output:
+                            </div>
+                            <pre style={{
+                                background: currentTheme.outputBg,
+                                color: currentTheme.outputText,
+                                padding: '0.75rem',
+                                borderRadius: '12px',
+                                fontFamily: 'monospace',
+                                fontSize: '0.9rem',
+                                minHeight: '80px',
+                                maxHeight: '150px',
+                                overflow: 'auto',
+                                border: `1px solid ${currentTheme.border}`,
+                                margin: 0
+                            }}>
+                                {output || 'Belum ada output. Klik "Jalankan" untuk melihat hasil.'}
+                            </pre>
+                        </div>
+                    </div>
+
+                    {/* Kolom kanan: Canvas Turtle */}
+                    <div style={{
+                        background: currentTheme.surface,
+                        borderRadius: '20px',
+                        padding: '1rem',
+                        boxShadow: '0 8px 20px rgba(0,0,0,0.05)',
+                        border: `1px solid ${currentTheme.border}`,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center'
+                    }}>
+                        <div style={{
+                            fontWeight: '500',
+                            marginBottom: '0.75rem',
+                            color: currentTheme.text,
+                            alignSelf: 'flex-start'
+                        }}>
+                            Canvas:
+                        </div>
+                        <div
+                            id="mycanvas"
+                            style={{
+                                width: '100%',
+                                aspectRatio: '1 / 1',
+                                background: theme === 'light' ? '#ffffff' : '#1a1a2e',
+                                borderRadius: '16px',
+                                border: `2px solid ${currentTheme.canvasBorder}`,
+                                boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                            }}
+                        ></div>
+                    </div>
                 </div>
-                <div
-                    className="skulpt-container"
-                    style={{
-                    border: "2px solid #ccc",
-                    display: 'flex',
-                    flexDirection: isMobile ? 'column' : 'row',
-                    gap: '20px',
-                    padding: '20px',
-                    alignItems: 'stretch',
-                    maxWidth: '100%',
-                    overflowX: 'hidden',
-                    }}
-                >
-                    {/* Editor */}
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                        <CodeMirror
-                        placeholder={'# Tuliskan kode anda disini!'}
-                        value={pythonCode}
-                        height="400px"
-                        theme={theme === 'dark' ? 'dark' : 'light'}
-                        extensions={[python()]}
-                        onChange={(value) => setPythonCode(value)}
-                        style={{ border: '1px solid #ccc', width: '100%' }}
-                    />
+            </Container>
 
-
-                    <div style={{ marginTop: '10px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                        <a onClick={() => runit()} className='button-3d-run'>
-                        <BsPlayFill /> Jalankan
-                        </a>
-                        <a onClick={resetCode} className='button-3d-reset'>
-                        <BsArrowClockwise /> Reset
-                        </a>
-                        <a className='button-3d-open' onClick={() => fileInputRef.current.click()}>
-                        <BsFolder2Open /> Buka File
-                        </a>
-                        <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept=".py"
-                        style={{ display: 'none' }}
-                        onChange={handleOpenFile}
-                        />
-                        <a className='button-3d-open' onClick={() => setShowSaveModal(true)}>
-                        <BsSave2 /> Simpan File
-                        </a>
-                    </div>
-
-                    <pre className="output mt-3" style={{ height: 60, overflow: 'auto' }}>{output}</pre>
-                    </div>
-
-                    {/* Canvas */}
-                    <div
-                    className="canvas-section"
-                    style={{
-                        flex: isMobile ? 'none' : '0 0 400px',
-                        width: '100%',
-                        maxWidth: '400px',
-                        maxHeight: 400,
-                        alignSelf: isMobile ? 'center' : 'flex-start',
-                        overflowX: isMobile ? 'auto' : 'visible',
-                    }}
-                    >
-                    <div id="mycanvas" style={{ width: '100%' }}></div>
-                    </div>
-                </div>
-
-                {/* Modal Simpan File */}
-                <Modal show={showSaveModal} onHide={() => setShowSaveModal(false)} centered>
-                    <Modal.Header closeButton>
-                    <Modal.Title>Simpan File</Modal.Title>
-                    </Modal.Header>
-                    <Modal.Body>
+            {/* Modal Simpan File */}
+            <Modal show={showSaveModal} onHide={() => setShowSaveModal(false)} centered>
+                <Modal.Header closeButton style={{
+                    backgroundColor: currentTheme.surface,
+                    borderBottom: `1px solid ${currentTheme.border}`,
+                    color: currentTheme.text
+                }}>
+                    <Modal.Title>Simpan Kode Python</Modal.Title>
+                </Modal.Header>
+                <Modal.Body style={{ backgroundColor: currentTheme.surface, color: currentTheme.text }}>
                     <Form.Group>
-                        <Form.Label>Nama File</Form.Label>
+                        <Form.Label>Nama file (tanpa .py)</Form.Label>
                         <Form.Control
-                        type="text"
-                        value={filename}
-                        onChange={(e) => setFilename(e.target.value)}
-                        placeholder="Masukkan nama file"
+                            type="text"
+                            value={filename}
+                            onChange={(e) => setFilename(e.target.value)}
+                            placeholder="my_script"
+                            style={{
+                                backgroundColor: currentTheme.outputBg,
+                                border: `1px solid ${currentTheme.border}`,
+                                color: currentTheme.text
+                            }}
                         />
                     </Form.Group>
-                    </Modal.Body>
-                    <Modal.Footer>
-                    <a onClick={() => setShowSaveModal(false)} className='button-3d-grey'>
+                </Modal.Body>
+                <Modal.Footer style={{
+                    backgroundColor: currentTheme.surface,
+                    borderTop: `1px solid ${currentTheme.border}`
+                }}>
+                    <Button variant="secondary" onClick={() => setShowSaveModal(false)}>
                         Batal
-                    </a>
-                    <a onClick={() => {
+                    </Button>
+                    <Button variant="primary" onClick={() => {
                         handleSaveFile();
                         setShowSaveModal(false);
-                    }} className='button-3d-open'>
-                        <BsDownload /> Simpan
-                    </a>
-                    </Modal.Footer>
-                </Modal>
+                    }}>
+                        <BsDownload style={{ marginRight: '6px' }} /> Simpan
+                    </Button>
+                </Modal.Footer>
+            </Modal>
         </div>
+    );
+};
+
+// Komponen tombol aksi reusable
+const ActionButton = ({ onClick, icon, label, variant, disabled }) => {
+    const getStyles = () => {
+        if (variant === 'primary') {
+            return {
+                background: '#4f46e5',
+                color: 'white',
+                border: 'none',
+                boxShadow: '0 2px 6px rgba(79,70,229,0.3)'
+            };
+        } else if (variant === 'secondary') {
+            return {
+                background: '#6c757d',
+                color: 'white',
+                border: 'none'
+            };
+        } else {
+            return {
+                background: 'transparent',
+                color: '#4f46e5',
+                border: '1px solid #4f46e5'
+            };
+        }
+    };
+
+    return (
+        <button
+            onClick={onClick}
+            disabled={disabled}
+            style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '8px 18px',
+                borderRadius: '40px',
+                fontWeight: '500',
+                fontSize: '0.9rem',
+                cursor: disabled ? 'not-allowed' : 'pointer',
+                transition: 'all 0.2s ease',
+                opacity: disabled ? 0.6 : 1,
+                ...getStyles()
+            }}
+            onMouseEnter={(e) => {
+                if (!disabled && variant !== 'outline') {
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                    e.currentTarget.style.boxShadow = '0 6px 12px rgba(0,0,0,0.1)';
+                } else if (!disabled && variant === 'outline') {
+                    e.currentTarget.style.background = '#4f46e5';
+                    e.currentTarget.style.color = 'white';
+                }
+            }}
+            onMouseLeave={(e) => {
+                if (variant !== 'outline') {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = 'none';
+                } else {
+                    e.currentTarget.style.background = 'transparent';
+                    e.currentTarget.style.color = '#4f46e5';
+                }
+            }}
+        >
+            {icon} {label}
+        </button>
     );
 };
 

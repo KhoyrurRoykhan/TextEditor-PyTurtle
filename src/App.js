@@ -9,7 +9,7 @@ function App() {
   return (
     <BrowserRouter>
     <Routes>
-      <Route path="/" element={<><Navigasibar/><TextEditorPage/></>}/>
+      <Route path="/" element={<><TextEditorPage/></>}/>
     </Routes>
     </BrowserRouter>
   );
