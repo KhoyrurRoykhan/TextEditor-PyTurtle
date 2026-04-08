@@ -1,0 +1,22 @@
+{
+  "files": {
+    "main.css": "/cart-react/static/css/main.ce054c75.css",
+    "main.js": "/cart-react/static/js/main.abc8e6a4.js",
+    "static/media/belajar-turtlee.png": "/cart-react/static/media/belajar-turtlee.b1038395bce65ccbf671.png",
+    "static/media/tantangann.png": "/cart-react/static/media/tantangann.808cac8652526cb08060.png",
+    "static/media/jukung-teratai.jpg": "/cart-react/static/media/jukung-teratai.bee8b4c52017e63f3280.jpg",
+    "static/media/susur-sungaii.png": "/cart-react/static/media/susur-sungaii.0b9ba8adb8a5257e9a83.png",
+    "static/media/stikes-sungai.jpg": "/cart-react/static/media/stikes-sungai.df0091576c1c9b67c086.jpg",
+    "static/media/menara-pandang.jpeg": "/cart-react/static/media/menara-pandang.206e9bd99a98973d99d8.jpeg",
+    "static/media/tujuan.webp": "/cart-react/static/media/tujuan.3de9120735314a3c0a9b.webp",
+    "static/media/kuralanding.png": "/cart-react/static/media/kuralanding.8af3ffa1cfe69a01f30f.png",
+    "static/media/sea-turtle.gif": "/cart-react/static/media/sea-turtle.9378cb5fa29bb4b5acb2.gif",
+    "index.html": "/cart-react/index.html",
+    "main.ce054c75.css.map": "/cart-react/static/css/main.ce054c75.css.map",
+    "main.abc8e6a4.js.map": "/cart-react/static/js/main.abc8e6a4.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.ce054c75.css",
+    "static/js/main.abc8e6a4.js"
+  ]
+}
